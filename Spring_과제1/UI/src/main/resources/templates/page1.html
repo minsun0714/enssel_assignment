@@ -1,0 +1,307 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      layout:decorate="~{layouts/default}">
+<head>
+    <meta charset="utf-8"/>
+    <meta http-equiv="X-UA-Compatible" content="IE=edge"/>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css">
+    <link rel="stylesheet" href="https://cdn3.devexpress.com/jslib/24.2.5/css/dx.light.css">
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+</head>
+<body class="dx-viewport">
+<div layout:fragment="content">
+    <div class="content container-fluid">
+        <div>사용자 페이지</div>
+        <div class="box">
+            <div class="box-header with-bordered">
+                <div class="box-body">
+                    <button id="fetchUser" onclick="fetchTableData()">조회</button>
+                    <button id="openRegisterModal">등록</button>
+                    <button id="openModifyModal">수정</button>
+                    <button id="deleteUser">삭제</button>
+                </div>
+                <table id="dataGrid">
+                    <thead id="data-table-header"></thead>
+                    <tbody id="data-table-body"></tbody>
+                </table>
+            </div>
+
+        </div>
+    </div>
+</div>
+
+<!-- 사용자 등록 모달 -->
+<div class="modal fade" id="userRegisterModal" tabindex="-1" role="dialog" aria-labelledby="userRegisterModalLabel"
+     aria-hidden="true">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="userRegisterModalLabel">사용자 등록</h5>
+                <button type="button" aria-label="Close" class="closeModalBtn">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body">
+                <form id="userRegisterForm">
+                    <div class="form-group">
+                        <label for="userName">이름</label>
+                        <input type="text" class="form-control" id="userName" placeholder="이름 입력">
+                    </div>
+                    <div class="form-group">
+                        <label for="userEmail">아이디</label>
+                        <input type="text" class="form-control" id="userEmail" placeholder="아이디 입력">
+                    </div>
+                    <div class="form-group">
+                        <label for="userPassword">비밀번호</label>
+                        <input type="password" class="form-control" id="userPassword" placeholder="비밀번호 입력">
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" id="closeRegisterModal">닫기</button>
+                <button type="button" class="btn btn-primary" id="saveUserBtn">등록</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!--        사용자 수정 모달-->
+<div class="modal fade" id="userModifyModal" tabindex="-1" role="dialog" aria-labelledby="userModifyModalLabel"
+     aria-hidden="true">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="userModifyModalLabel">사용자 수정</h5>
+                <button type="button" aria-label="Close" class="closeModalBtn">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body">
+                <form id="userModifyForm">
+                    <div class="form-group">
+                        <label for="userName">이름</label>
+                        <input type="text" class="form-control" id="modifiedUserName" placeholder="이름 입력">
+                    </div>
+                    <div class="form-group">
+                        <label for="userEmail">아이디</label>
+                        <input type="text" readonly class="form-control" id="modifiedUserEmail" placeholder="아이디 입력">
+                    </div>
+                    <div class="form-group">
+                        <label for="userPassword">비밀번호</label>
+                        <input type="password" class="form-control" id="modifiedUserPassword" placeholder="비밀번호 입력">
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" id="closeModifyModal">닫기</button>
+                <button type="button" class="btn btn-primary" id="modifyUserBtn">수정</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<th:block layout:fragment="script">
+    <script type="text/javascript">
+        let dataGridInstance;
+        let selectedData;
+
+        function fetchTableData() {
+            fetch('http://localhost:8082/bi/user/table')
+                .then(response => response.json())
+                .then(data => {
+                    if (dataGridInstance) {
+                        dataGridInstance.option("dataSource", data);
+                    }
+                })
+                .catch(error => console.error('Error fetching data:', error));
+        }
+
+        $(document).ready(function() {
+            dataGridInstance = $("#dataGrid").dxDataGrid({
+                dataSource: [], // 초기에는 빈 데이터
+                keyExpr: "userId",
+                selection: {
+                    mode: "single",
+                    allowSelectAll: false,
+                    showCheckBoxesMode: "onClick"
+                },
+                columns: [
+                    { dataField: "userId", caption: "아이디" },
+                    { dataField: "username", caption: "이름" },
+                    { dataField: "password", caption: "비밀번호" },
+                    { dataField: "registeredDate", caption: "등록 날짜" },
+                    { dataField: "registeredUser", caption: "등록 유저" },
+                    { dataField: "updateDate", caption: "갱신 일자" },
+                    { dataField: "updatedUser", caption: "갱신 유저" },
+                    { dataField: "useYN", caption: "존재 여부" }
+                ],
+                noDataText: "데이터가 없습니다.",
+                onSelectionChanged: function(data){
+                    selectedData = data.selectedRowsData[0]
+
+                }
+            }).dxDataGrid("instance");
+
+            // 조회 버튼 클릭 시 데이터 조회
+            $("#fetchUser").on("click", function() {
+                fetchTableData();
+            });
+
+            // 등록 버튼 클릭 시 모달 열기
+            $("#openRegisterModal").on("click", function() {
+                $("#userRegisterModal").modal("show");
+                $("#userRegisterForm")[0].reset(); // 입력 필드 초기화
+            });
+
+            // 등록 모달 닫기 버튼 (닫기 버튼)
+            $("#closeRegisterModal").on("click", function() {
+                $("#userRegisterModal").modal("hide");
+            });
+
+            // 수정 버튼 클릭 시 모달 열기
+            $("#openModifyModal").on("click", function() {
+                if (!selectedData) {
+                    alert("필드를 선택해주세요")
+                    return
+                }
+                selectedData = dataGridInstance.getSelectedRowsData()[0]
+                $("#userModifyModal").modal("show");
+
+                // 전역변수에서 가져오지 말고 테이블의 데이터를 가져올 것
+                $("#modifiedUserEmail").val(selectedData?.userId);
+                $("#modifiedUserName").val(selectedData?.username);
+                $("#modifiedUserPassword").val(selectedData?.password);
+            });
+
+            // 수정 모달 닫기 버튼 (닫기 버튼)
+            $("#closeModifyModal").on("click", function() {
+                $("#userModifyModal").modal("hide");
+            });
+
+            $(".closeModalBtn").on("click", function() {
+                $("#userRegisterModal").modal("hide");
+                $("#userModifyModal").modal("hide");
+            });
+
+            // 등록 버튼 클릭 시 폼 데이터 저장
+            $("#saveUserBtn").on("click", function() {
+                const userName = $("#userName").val();
+                const userEmail = $("#userEmail").val();
+                const userPassword = $("#userPassword").val();
+
+                if (!userName || !userEmail || !userPassword) {
+                    alert("모든 필드를 입력해주세요.");
+                    return;
+                }
+
+                const userData = {
+                    username: userName,
+                    userId: userEmail,
+                    password: userPassword
+                };
+
+
+                $.ajax({
+                    url: "http://localhost:8082/bi/user/regiUser",  // 📌 백엔드 API 엔드포인트
+                    type: "POST",
+                    contentType: "application/json",
+                    data: JSON.stringify(userData),
+                    success: function(response) {
+                        alert("사용자가 성공적으로 등록되었습니다.");
+                        $("#userRegisterModal").modal("hide"); // 모달 닫기
+                        $("#userRegisterForm")[0].reset(); // 입력 필드 초기화
+                        fetchTableData();
+                    },
+                    error: function(xhr, status, error) {
+                        console.error("사용자 등록 실패:", xhr.responseText);
+                        alert("사용자 등록 중 오류가 발생했습니다.");
+                    }
+                });
+            });
+
+            // 수정 버튼 클릭 시 새로운 폼 데이터 저장
+            $("#modifyUserBtn").on("click", function() {
+                const userName = $("#modifiedUserName").val();
+                const userEmail = $("#modifiedUserEmail").val();
+                const userPassword = $("#modifiedUserPassword").val();
+
+                if (!userName || !userEmail || !userPassword) {
+                    alert("모든 필드를 입력해주세요.");
+                    return;
+                }
+
+                const userData = {
+                    username: userName,
+                    userId: userEmail,
+                    password: userPassword
+                };
+
+
+
+               if (confirm("수정하시겠습니까?")){
+                   $.ajax({
+                        url: "http://localhost:8082/bi/user/update",  // 📌 백엔드 API 엔드포인트
+                        type: "POST",
+                        contentType: "application/json",
+                        data: JSON.stringify(userData),
+                        success: function(response) {
+                            alert("사용자가 성공적으로 수정되었습니다.");
+                            $("#userModifyModal").modal("hide"); // 모달 닫기
+                            fetchTableData();
+                        },
+                        error: function(xhr, status, error) {
+                            console.error("사용자 수정 실패:", xhr.responseText);
+                            alert("사용자 수정 중 오류가 발생했습니다.");
+                        }
+                   });
+               }
+            });
+
+            // 삭제 버튼 클릭 시 데이터 삭제
+            $("#deleteUser").on("click", function() {
+                const userName = selectedData?.username;
+                const userEmail = selectedData?.userId;
+                const userPassword = selectedData?.password;
+
+                if (!userName || !userEmail || !userPassword) {
+                    alert("삭제할 필드를 선택해주세요.");
+                    return;
+                }
+
+                const userData = {
+                    username: userName,
+                    userId: userEmail,
+                    password: userPassword
+                };
+
+                console.log(userData);
+
+                if (confirm("삭제하시겠습니까?")){
+                    $.ajax({
+                        url: "http://localhost:8082/bi/user/delete",  // 📌 백엔드 API 엔드포인트
+                        type: "POST",
+                        contentType: "application/json",
+                        data: JSON.stringify(userData),
+                        success: function(response) {
+                            alert("사용자가 성공적으로 삭제되었습니다.");
+                            fetchTableData();
+                        },
+                        error: function(xhr, status, error) {
+                            console.error("사용자 삭제 실패:", xhr.responseText);
+                            alert("사용자 삭제 중 오류가 발생했습니다.");
+                        }
+                    });
+                }
+            });
+        });
+    </script>
+    <script type="text/javascript" src="https://cdn3.devexpress.com/jslib/24.2.5/js/dx.all.js">
+
+    </script>
+</th:block>
+
+
+</body>
+</html>
