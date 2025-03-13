@@ -1,8 +1,7 @@
 package com.example.api.controller;
 
-import com.example.api.dto.User;
+import com.example.api.domain.User;
 import com.example.api.service.UserService;
-import lombok.AllArgsConstructor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -12,7 +11,6 @@ import java.util.List;
 
 @RestController
 @RequestMapping("/bi/user")
-//@AllArgsConstructor
 public class UserController {
     @Autowired
     private UserService userService;
