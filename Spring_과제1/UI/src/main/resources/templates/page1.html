@@ -22,6 +22,40 @@
                     <button id="openModifyModal">수정</button>
                     <button id="deleteUser">삭제</button>
                 </div>
+                <hr/>
+                <form id="searchForm" action="http://localhost:8082/search">
+                    <fieldset>
+                        <label for="userNameFilter">이름</label>
+                        <input type="text" id="userNameFilter"/>
+                        <label for="userIdFilter">아이디</label>
+                        <input type="text" id="userIdFilter"/>
+                        <label for="regiUserFilter">등록 아이디</label>
+                        <input type="text" id="regiUserFilter"/>
+                        <label for="updaUserFilter">수정 아이디</label>
+                        <input type="text" id="updaUserFilter"/>
+                    </fieldset>
+                    <fieldset>
+                        <legend>등록 일자</legend>
+                        <label for="regiDtFromFilter">시작일</label>
+                        <input type="date" id="regiDtFromFilter" name="regiDtFromFilter"/>
+                        <span> - </span>
+                        <label for="regiDtToFilter">종료일</label>
+                        <input type="date" id="regiDtToFilter" name="regiDtToFilter"/>
+                    </fieldset>
+                    <fieldset>
+                        <legend>수정 일자</legend>
+                        <label for="updaDtFromFilter">시작일</label>
+                        <input type="date" id="updaDtFromFilter" name="updaDtFromFilter"/>
+                        <span> - </span>
+                        <label for="updaDtToFilter">종료일</label>
+                        <input type="date" id="updaDtToFilter" name="updaDtToFilter"/>
+                    </fieldset>
+                </form>
+                <hr/>
+                <table id="groupBy">
+                    <thead id="groupBy-table-header"></thead>
+                    <tbody id="groupBy-table-body"></tbody>
+                </table>
                 <table id="dataGrid">
                     <thead id="data-table-header"></thead>
                     <tbody id="data-table-body"></tbody>
@@ -105,10 +139,36 @@
 <th:block layout:fragment="script">
     <script type="text/javascript">
         let dataGridInstance;
+        let groupByInstance;
         let selectedData;
 
         function fetchTableData() {
-            fetch('http://localhost:8082/bi/user/table')
+            // 필터된 데이터 바인딩
+            const username = document.getElementById('userNameFilter').value;
+            const userId = document.getElementById('userIdFilter').value;
+            const regiUser = document.getElementById('regiUserFilter').value;
+            const updaUser = document.getElementById('updaUserFilter').value;
+            const regiDtFrom = document.getElementById('regiDtFromFilter').value;
+            const regiDtTo = document.getElementById('regiDtToFilter').value;
+            const updaDtFrom = document.getElementById('updaDtFromFilter').value;
+            const updaDtTo = document.getElementById('updaDtToFilter').value;
+
+            const params = {
+                userId,
+                username,
+                regiUser,
+                updaUser,
+                regiDtFrom,
+                regiDtTo,
+                updaDtFrom,
+                updaDtTo
+            }
+            const query = Object.keys(params)
+             .map(k => encodeURIComponent(k) + '=' + encodeURIComponent(params[k]))
+             .join('&');
+
+             const urlForAllData = new URL('http://localhost:12400/bi/user/table' + "?" + query);
+             fetch(urlForAllData)
                 .then(response => response.json())
                 .then(data => {
                     if (dataGridInstance) {
@@ -116,9 +176,28 @@
                     }
                 })
                 .catch(error => console.error('Error fetching data:', error));
+
+            const urlForFilteredData = new URL('http://localhost:12400/bi/user/select' + "?" + query);
+            fetch(urlForFilteredData)
+                .then(response => response.json())
+                .then(data => {
+                    if (groupByInstance) {
+                        groupByInstance.option("dataSource", data);
+                    }
+                })
+                .catch(error => console.error('Error fetching data:', error));
         }
 
         $(document).ready(function() {
+            groupByInstance = $("#groupBy").dxDataGrid({
+                dataSource: [],
+                columns: [
+                    { dataField: "registeredDate", caption: "등록일" },
+                    { dataField: "usernameCount", caption: "계정 수" },
+                ],
+                noDataText: "데이터가 없습니다.",
+            }).dxDataGrid("instance");
+
             dataGridInstance = $("#dataGrid").dxDataGrid({
                 dataSource: [], // 초기에는 빈 데이터
                 keyExpr: "userId",
@@ -140,7 +219,6 @@
                 noDataText: "데이터가 없습니다.",
                 onSelectionChanged: function(data){
                     selectedData = data.selectedRowsData[0]
-
                 }
             }).dxDataGrid("instance");
 
@@ -204,7 +282,7 @@
 
 
                 $.ajax({
-                    url: "http://localhost:8082/bi/user/regiUser",  // 📌 백엔드 API 엔드포인트
+                    url: "http://localhost:12400/bi/user/regiUser",  // 📌 백엔드 API 엔드포인트
                     type: "POST",
                     contentType: "application/json",
                     data: JSON.stringify(userData),
@@ -242,7 +320,7 @@
 
                if (confirm("수정하시겠습니까?")){
                    $.ajax({
-                        url: "http://localhost:8082/bi/user/update",  // 📌 백엔드 API 엔드포인트
+                        url: "http://localhost:12400/bi/user/update",  // 📌 백엔드 API 엔드포인트
                         type: "POST",
                         contentType: "application/json",
                         data: JSON.stringify(userData),
@@ -280,7 +358,7 @@
 
                 if (confirm("삭제하시겠습니까?")){
                     $.ajax({
-                        url: "http://localhost:8082/bi/user/delete",  // 📌 백엔드 API 엔드포인트
+                        url: "http://localhost:12400/bi/user/delete",  // 📌 백엔드 API 엔드포인트
                         type: "POST",
                         contentType: "application/json",
                         data: JSON.stringify(userData),

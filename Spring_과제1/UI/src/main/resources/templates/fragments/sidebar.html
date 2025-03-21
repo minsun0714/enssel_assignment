@@ -1,0 +1,18 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>Title</title>
+</head>
+<body>
+  <div th:fragment="sidebar">
+    <aside>
+      <h3>전체 메뉴</h3>
+      <ul>
+        <li><a th:href="@{/page1}">사용자 관리</a></li>
+        <li><a th:href="@{/page2}">메뉴 관리</a></li>
+      </ul>
+    </aside>
+  </div>
+</body>
+</html>

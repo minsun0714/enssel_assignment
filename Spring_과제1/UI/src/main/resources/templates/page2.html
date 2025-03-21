@@ -1,0 +1,207 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      layout:decorate="~{layouts/default}">
+<head>
+    <meta charset="utf-8"/>
+    <meta http-equiv="X-UA-Compatible" content="IE=edge"/>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css">
+    <link rel="stylesheet" href="https://cdn3.devexpress.com/jslib/24.2.5/css/dx.light.css">
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+</head>
+<body class="dx-viewport">
+<div layout:fragment="content">
+    <div class="content container-fluid">
+        <div>메뉴 페이지</div>
+        <div class="box">
+            <div class="box-header with-bordered">
+                <div class="box-body">
+                    <button id="fetchMenu" onclick="fetchMenuData()">조회</button>
+                    <button id="openRegisterModal">등록</button>
+                    <button id="deleteMenu">삭제</button>
+                </div>
+                <hr/>
+                <table id="dataGrid">
+                    <thead id="data-table-header"></thead>
+                    <tbody id="data-table-body"></tbody>
+                </table>
+            </div>
+
+        </div>
+    </div>
+</div>
+
+<!-- 메뉴 등록 모달 -->
+<div class="modal fade" id="menuRegisterModal" tabindex="-1" role="dialog" aria-labelledby="menuRegisterModalLabel"
+     aria-hidden="true">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="menuRegisterModalLabel">메뉴 등록</h5>
+                <button type="button" aria-label="Close" class="closeModalBtn">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body">
+                <form id="menuRegisterForm">
+                    <div class="form-group">
+                        <label for="registeredUser">아이디</label>
+                        <input type="text" class="form-control" id="registeredUser" placeholder="아이디 입력">
+                    </div>
+                    <div class="form-group">
+                        <label for="menuname">이름</label>
+                        <input type="text" class="form-control" id="menuname" placeholder="이름 입력">
+                    </div>
+                    <div class="form-group">
+                        <label for="upperMenuId">상위 메뉴 아이디</label>
+                        <input type="text" class="form-control" id="upperMenuId" placeholder="상위 메뉴 아이디 입력">
+                    </div>
+                    <div class="form-group">
+                        <label for="url">url</label>
+                        <input type="text" class="form-control" id="url" placeholder="url 입력">
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" id="closeRegisterModal">닫기</button>
+                <button type="button" class="btn btn-primary" id="saveMenuBtn">등록</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<th:block layout:fragment="script">
+    <script type="text/javascript">
+        let dataGridInstance;
+        let selectedData;
+
+        function fetchMenuData() {
+             const urlForAllData = new URL('http://localhost:12400/bi/menu/table');
+             fetch(urlForAllData)
+                .then(response => response.json())
+                .then(data => {
+                    if (dataGridInstance) {
+                        dataGridInstance.option("dataSource", data);
+                    }
+                })
+                .catch(error => console.error('Error fetching data:', error));
+        }
+
+        $(document).ready(function() {
+            dataGridInstance = $("#dataGrid").dxDataGrid({
+                dataSource: [], // 초기에는 빈 데이터
+                keyExpr: "menuId",
+                selection: {
+                    mode: "single",
+                    allowSelectAll: false,
+                    showCheckBoxesMode: "onClick"
+                },
+                columns: [
+                    { dataField: "menuId", caption: "아이디" },
+                    { dataField: "menuname", caption: "이름" },
+                    { dataField: "sort", caption: "소트" },
+                    { dataField: "upperMenuId", caption: "상위 메뉴 아이디" },
+                    { dataField: "url", caption: "URL" },
+                    { dataField: "useYN", caption: "존재 여부" },
+                    { dataField: "registeredDate", caption: "등록 날짜" },
+                    { dataField: "registeredUser", caption: "등록 유저" },
+                    { dataField: "updatedDate", caption: "수정 날짜" },
+                    { dataField: "updatedUser", caption: "수정 유저" }
+                ],
+                noDataText: "데이터가 없습니다.",
+                onSelectionChanged: function(data){
+                    selectedData = data.selectedRowsData[0]
+                    console.log(selectedData?.menuId);
+                }
+            }).dxDataGrid("instance");
+
+            // 조회 버튼 클릭 시 데이터 조회
+            $("#fetchMenu").on("click", function() {
+                fetchMenuData();
+            });
+
+            // 등록 버튼 클릭 시 모달 열기
+            $("#openRegisterModal").on("click", function() {
+                $("#menuRegisterModal").modal("show");
+                $("#menuRegisterForm")[0].reset(); // 입력 필드 초기화
+            });
+
+            // 등록 모달 닫기 버튼 (닫기 버튼)
+            $("#closeRegisterModal").on("click", function() {
+                $("#menuRegisterModal").modal("hide");
+            });
+
+            // 등록 버튼 클릭 시 폼 데이터 저장
+            $("#saveMenuBtn").on("click", function() {
+                const registeredUser = $("#registeredUser").val();
+                const menuname = $("#menuname").val();
+                const upperMenuId = $("#upperMenuId").val();
+                const url = $("#url").val();
+
+                if (!registeredUser || !menuname || !url) {
+                    alert("모든 필드를 입력해주세요.");
+                    return;
+                }
+
+                const menuData = {
+                    registeredUser,
+                    menuname,
+                    upperMenuId,
+                    url
+                };
+
+
+                $.ajax({
+                    url: "http://localhost:12400/bi/menu/regi",
+                    type: "POST",
+                    contentType: "application/json",
+                    data: JSON.stringify(menuData),
+                    success: function(response) {
+                        alert("메뉴가 성공적으로 등록되었습니다.");
+                        $("#menuRegisterModal").modal("hide"); // 모달 닫기
+                        $("#menuRegisterForm")[0].reset(); // 입력 필드 초기화
+                        fetchMenuData();
+                    },
+                    error: function(xhr, status, error) {
+                        console.error("메뉴 등록 실패:", xhr.responseText);
+                        alert("메뉴 등록 중 오류가 발생했습니다.");
+                    }
+                });
+            });
+
+            // 삭제 버튼 클릭 시 데이터 삭제
+            $("#deleteMenu").on("click", function() {
+                const menuId = selectedData?.menuId;
+
+                if (!menuId) {
+                    alert("삭제할 필드를 선택해주세요.");
+                    return;
+                }
+
+                if (confirm("삭제하시겠습니까?")){
+                    $.ajax({
+                        url: `http://localhost:12400/bi/menu/delete?menuId=${menuId}`,  // 📌 백엔드 API 엔드포인트
+                        type: "POST",
+                        contentType: "application/json",
+                        success: function(response) {
+                            alert("사용자가 성공적으로 삭제되었습니다.");
+                            fetchMenuData();
+                        },
+                        error: function(xhr, status, error) {
+                            console.error("메뉴 삭제 실패:", xhr.responseText);
+                            alert("메뉴 삭제 중 오류가 발생했습니다.");
+                        }
+                    });
+                }
+            });
+        });
+    </script>
+    <script type="text/javascript" src="https://cdn3.devexpress.com/jslib/24.2.5/js/dx.all.js">
+
+    </script>
+</th:block>
+
+
+</body>
+</html>

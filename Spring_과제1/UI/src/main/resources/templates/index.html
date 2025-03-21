@@ -1,12 +1,10 @@
 <!Doctype html>
-<html>
+<html xmlns:th="http://www.thymeleaf.org">
     <head>
         <meta charset="UTF-8"/>
         <meta http-equiv="X-UA-Compatible" content="IE=edge"/>
     </head>
     <body>
-        <div>
-            <a href="http://localhost:8081/page1">사용자 페이지 이동</a>
-        </div>
+        <div th:replace="fragments/sidebar :: sidebar"></div>
     </body>
 </html>
