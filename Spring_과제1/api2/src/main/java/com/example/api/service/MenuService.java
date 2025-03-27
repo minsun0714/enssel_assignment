@@ -46,5 +46,16 @@ public class MenuService {
         deletedMenu.setUpdatedDate(LocalDateTime.now());
         deletedMenu.setUseYN("N");
         menuRepository.save(deletedMenu);
+
+        // 하위 메뉴들도 비활성화
+        List<Menu> childMenus = menuRepository.findByUpperMenuId(menuId);
+
+        for (Menu child : childMenus) {
+            child.setUpdatedUser(deletedMenu.getRegisteredUser()); // 부모의 등록자 기준
+            child.setUpdatedDate(LocalDateTime.now());
+            child.setUseYN("N");
+        }
+
+        menuRepository.saveAll(childMenus);
     }
 }

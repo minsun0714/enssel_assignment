@@ -12,16 +12,16 @@ import com.example.demo.dto.MenuDTO;
 import com.example.demo.service.MenuService;
 
 @Controller
-@RequestMapping("/page2")
-public class menuDataController {
+@RequestMapping("/page1")
+public class userDataController {
     @Autowired
     private MenuService menuService;
 
     @GetMapping
-    public String page2(Model model){
+    public String page1(Model model){
         List<MenuDTO> menuList = menuService.getAllMenus();
         model.addAttribute("menuList", menuList);
-        model.addAttribute("content", "page2");
+        model.addAttribute("content", "page1");
         return "layout";
     }
 

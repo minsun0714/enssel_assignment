@@ -6,11 +6,13 @@
 </head>
 <body>
   <div th:fragment="sidebar">
-    <aside>
+    <aside style="width: 20vw;">
       <h3>전체 메뉴</h3>
       <ul>
-        <li><a th:href="@{/page1}">사용자 관리</a></li>
-        <li><a th:href="@{/page2}">메뉴 관리</a></li>
+        <li th:each="menu : ${menuList}">
+          <a th:href="@{${menu.url}}"
+             th:text="${menu.menuname}">Menu</a>
+        </li>
       </ul>
     </aside>
   </div>

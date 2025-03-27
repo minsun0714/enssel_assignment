@@ -106,7 +106,7 @@ public class UserService {
     }
 
     private BooleanExpression userIdContains(String userId) {
-        return QUser.user.userId.contains(userId);
+        return userId == null ? QUser.user.userId.contains(userId) : null;
     }
 
     private BooleanExpression usernameContains(String username) {

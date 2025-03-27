@@ -1,0 +1,14 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>Title</title>
+</head>
+<body>
+<div style="display: flex">
+  <div th:replace="fragments/sidebar :: sidebar"></div>
+
+  <div style="margin-left: 20px;" th:replace="${content}"></div>
+</div>
+</body>
+</html>

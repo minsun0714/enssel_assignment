@@ -11,7 +11,7 @@
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 </head>
 <body class="dx-viewport">
-<div layout:fragment="content">
+<div th:fragment="content">
     <div class="content container-fluid">
         <div>메뉴 페이지</div>
         <div class="box">
@@ -77,7 +77,7 @@
         let selectedData;
 
         function fetchMenuData() {
-             const urlForAllData = new URL('http://localhost:12400/bi/menu/table');
+             const urlForAllData = new URL('http://localhost:12400/menu/bi/menu/table');
              fetch(urlForAllData)
                 .then(response => response.json())
                 .then(data => {
@@ -89,16 +89,17 @@
         }
 
         $(document).ready(function() {
-            dataGridInstance = $("#dataGrid").dxDataGrid({
+            dataGridInstance = $("#dataGrid").dxTreeList({
                 dataSource: [], // 초기에는 빈 데이터
                 keyExpr: "menuId",
+                parentIdExpr: "upperMenuId",
                 selection: {
                     mode: "single",
                     allowSelectAll: false,
                     showCheckBoxesMode: "onClick"
                 },
                 columns: [
-                    { dataField: "menuId", caption: "아이디" },
+                    { dataField: "menuId", caption: "아이디", alignment: "left"},
                     { dataField: "menuname", caption: "이름" },
                     { dataField: "sort", caption: "소트" },
                     { dataField: "upperMenuId", caption: "상위 메뉴 아이디" },
@@ -114,7 +115,7 @@
                     selectedData = data.selectedRowsData[0]
                     console.log(selectedData?.menuId);
                 }
-            }).dxDataGrid("instance");
+            }).dxTreeList("instance");
 
             // 조회 버튼 클릭 시 데이터 조회
             $("#fetchMenu").on("click", function() {
@@ -153,7 +154,7 @@
 
 
                 $.ajax({
-                    url: "http://localhost:12400/bi/menu/regi",
+                    url: "http://localhost:12400/menu/bi/menu/regi",
                     type: "POST",
                     contentType: "application/json",
                     data: JSON.stringify(menuData),
@@ -181,7 +182,7 @@
 
                 if (confirm("삭제하시겠습니까?")){
                     $.ajax({
-                        url: `http://localhost:12400/bi/menu/delete?menuId=${menuId}`,  // 📌 백엔드 API 엔드포인트
+                        url: `http://localhost:12400/menu/bi/menu/delete?menuId=${menuId}`,  // 📌 백엔드 API 엔드포인트
                         type: "POST",
                         contentType: "application/json",
                         success: function(response) {
